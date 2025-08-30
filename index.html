@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat Assistant Premium</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts - Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome untuk ikon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #0d0e1b;
+            color: #e2e8f0;
+            overflow: hidden;
+        }
+        .container-main {
+            background-color: #1a1c22;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 40px -5px rgba(0, 0, 0, 0.4);
+            max-height: 95vh;
+            width: 90%; /* Diperlebar */
+            max-width: 1400px; /* Diperbesar */
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        .input-area {
+            background-color: #1a1c22;
+            border-top: 1px solid #33363b;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+        }
+        #prompt-input {
+            background-color: #292a34;
+            border: 1px solid #4b5563;
+            color: #e2e8f0;
+            border-radius: 9999px;
+            padding: 0.75rem 1.5rem;
+            outline: none;
+            width: 100%;
+            transition: border-color 0.2s;
+        }
+        #prompt-input:focus {
+            border-color: #6d28d9;
+        }
+        .btn-send {
+            background: linear-gradient(45deg, #8b5cf6, #d946ef);
+            color: #e2e8f0;
+            width: 3.5rem;
+            height: 3.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 1rem;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+        .btn-send:hover:not(:disabled) {
+            transform: scale(1.05);
+        }
+        .btn-send:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .chat-area {
+            overflow-y: auto;
+            flex-grow: 1;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column-reverse;
+        }
+        .message-bubble {
+            margin-bottom: 1.5rem;
+            max-width: 90%;
+            line-height: 1.6;
+        }
+        .user-message {
+            margin-left: auto;
+            background-color: #4b5563;
+            border-radius: 1rem;
+            padding: 0.75rem 1rem;
+        }
+        .ai-message {
+            margin-right: auto;
+        }
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 300px; /* Diperlebar */
+            height: 100%;
+            background-color: #1a1c22;
+            padding: 2rem;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
+            z-index: 50;
+        }
+        .sidebar.open {
+            transform: translateX(0);
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 40;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+        .overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        .ai-bubble-box {
+            background-color: #292a34;
+            border-radius: 1rem 1rem 1rem 0;
+            padding: 1rem;
+            max-width: 90%;
+        }
+        .typing-animation-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: #9ca3af;
+            border-radius: 50%;
+            animation: bounce 1s infinite;
+        }
+        .typing-animation-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .typing-animation-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        .sidebar-item-active {
+            color: #e2e8f0;
+            font-weight: 600;
+        }
+        .sidebar-btn {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 0.5rem 0;
+            transition: color 0.2s;
+        }
+        .sidebar-btn:hover {
+            color: #fff;
+        }
+        .product-card, .tool-card {
+            background: linear-gradient(135deg, #292a34, #1a1c22);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .product-card:hover, .tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+        }
+        .btn-buy, .btn-use {
+            background: linear-gradient(45deg, #8b5cf6, #d946ef);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            transition: opacity 0.2s;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+        }
+        .btn-buy:hover, .btn-use:hover {
+            opacity: 0.9;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #1a1c22;
+            padding: 2rem;
+            border-radius: 1rem;
+            max-width: 500px;
+            width: 90%;
+            position: relative;
+        }
+        .payment-option {
+            background-color: #292a34;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        .payment-option.selected {
+            border: 2px solid #8b5cf6;
+            background-color: #3f414a;
+        }
+        .payment-option:hover {
+            transform: translateY(-3px);
+            background-color: #3f414a;
+        }
+        
+        .ddos-simulation-container {
+            font-family: monospace;
+            background-color: #1a1c22;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            color: #00ff00;
+            overflow-y: scroll;
+            height: 300px;
+            white-space: pre-wrap;
+            animation: terminal-glow 1.5s ease-in-out infinite alternate;
+        }
+        @keyframes terminal-glow {
+            from { text-shadow: 0 0 5px #00ff00; }
+            to { text-shadow: 0 0 10px #00ff00; }
+        }
+        .ddos-vip-simulation-container {
+            font-family: monospace;
+            background-color: #1a1c22;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            color: #ff0000;
+            overflow-y: scroll;
+            height: 300px;
+            white-space: pre-wrap;
+            animation: vip-terminal-glow 1s ease-in-out infinite alternate;
+        }
+        @keyframes vip-terminal-glow {
+            from { text-shadow: 0 0 5px #ff0000; }
+            to { text-shadow: 0 0 10px #ff0000; }
+        }
+        
+        /* Styling untuk upload gambar */
+        .upload-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1.5rem;
+        }
+        .upload-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            min-height: 200px;
+            border: 2px dashed #8b5cf6;
+            border-radius: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .upload-label:hover {
+            border-color: #d946ef;
+            background-color: rgba(139, 92, 246, 0.1);
+        }
+        .upload-icon {
+            font-size: 3rem;
+            color: #8b5cf6;
+            margin-bottom: 1rem;
+        }
+        .upload-text {
+            text-align: center;
+            color: #e2e8f0;
+        }
+        .upload-preview {
+            max-width: 100%;
+            max-height: 300px;
+            margin-top: 1rem;
+            border-radius: 0.5rem;
+            display: none;
+        }
+        .upload-btn {
+            margin-top: 1.5rem;
+            background: linear-gradient(45deg, #8b5cf6, #d946ef);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: opacity 0.2s;
+            display: none;
+        }
+        .upload-btn:hover {
+            opacity: 0.9;
+        }
+        .result-container {
+            margin-top: 1.5rem;
+            width: 100%;
+            display: none;
+        }
+        .url-box {
+            background-color: #292a34;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-top: 1rem;
+            word-break: break-all;
+        }
+        .copy-btn {
+            margin-top: 0.5rem;
+            background-color: #4b5563;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            border: none;
+            cursor: pointer;
+        }
+        .copy-btn:hover {
+            background-color: #6b7280;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4 sm:p-8">
+
+    <!-- Sidebar Menu -->
+    <div id="sidebar" class="sidebar">
+        <button id="close-sidebar-btn" class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
+            <i class="fas fa-times"></i>
+        </button>
+        <h2 class="text-2xl font-semibold text-white mb-8">Menu</h2>
+        <ul>
+            <li class="mb-4">
+                <button data-page="tools" class="sidebar-btn text-gray-400 hover:text-white transition-colors"><i class="fas fa-tools mr-3"></i>Tools</button>
+            </li>
+            <li class="mb-4">
+                <button data-page="produk" class="sidebar-btn text-gray-400 hover:text-white transition-colors"><i class="fas fa-box mr-3"></i>Produk</button>
+            </li>
+            <li class="mb-4">
+                <a href="https://wa.me/6285351952977" target="_blank" class="sidebar-btn text-gray-400 hover:text-white transition-colors"><i class="fas fa-user-shield mr-3"></i>Admin</a>
+            </li>
+            <li class="mb-4">
+                <a href="https://t.me/cskz10_bot" target="_blank" class="sidebar-btn text-gray-400 hover:text-white transition-colors"><i class="fas fa-headset mr-3"></i>Customer Service</a>
+            </li>
+            <li class="mb-4">
+                <button data-page="chat-ai" class="sidebar-btn text-gray-400 hover:text-white transition-colors sidebar-item-active"><i class="fas fa-comments mr-3"></i>Chat AI</button>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Overlay -->
+    <div id="overlay" class="overlay"></div>
+
+    <!-- Kontainer Utama -->
+    <div class="container-main">
+        <!-- Header -->
+        <header class="p-6 flex items-center justify-between">
+            <button id="open-sidebar-btn" class="text-gray-400 hover:text-white text-xl transition-colors">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="flex-1 text-center">
+                <div class="inline-block p-2 rounded-full mb-2" style="background-color: #292a34;">
+                    <i class="fas fa-robot text-purple-400 text-3xl"></i>
+                </div>
+                <h1 class="text-xl font-bold text-white mb-1">Gemini 2.0 Flash</h1>
+                <p class="text-sm text-gray-400">AI Assistant siap membantu Anda</p>
+            </div>
+            <div class="w-8"></div> <!-- Spacer -->
+        </header>
+
+        <!-- Area Chat -->
+        <div class="chat-area" id="chat-container">
+            <!-- Teks "Selamat datang" -->
+            <div class="ai-message message-bubble">
+                <div class="ai-bubble-box">
+                    <p class="text-gray-300">Selamat datang! Saya adalah Gemini 2.0 Flash. Ada yang bisa saya bantu hari ini?</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Area Input -->
+        <div class="input-area">
+            <input type="text" id="prompt-input" placeholder="Ketik pesan Anda..." class="flex-grow">
+            <button id="send-btn" class="btn-send">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal Pembayaran -->
+    <div id="payment-modal" class="modal">
+        <div class="modal-content">
+            <h3 class="text-2xl font-bold mb-4 text-center text-white">Konfirmasi Pembelian</h3>
+            <div id="payment-product-details" class="text-center mb-6">
+                <!-- Detail produk akan dimuat di sini -->
+            </div>
+            <p class="text-center text-sm text-gray-400 mb-4">Pilih metode pembayaran:</p>
+            <div id="payment-methods" class="mb-6 space-y-4">
+                <!-- Metode pembayaran akan dimuat di sini -->
+            </div>
+            <div id="confirm-payment-container" class="hidden">
+                <button id="confirm-payment-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-full transition-colors">Konfirmasi Pembayaran</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const openSidebarBtn = document.getElementById('open-sidebar-btn');
+            const closeSidebarBtn = document.getElementById('close-sidebar-btn');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            const promptInput = document.getElementById('prompt-input');
+            const sendBtn = document.getElementById('send-btn');
+            const chatArea = document.getElementById('chat-container');
+            const sidebarBtns = document.querySelectorAll('.sidebar-btn[data-page]');
+            const paymentModal = document.getElementById('payment-modal');
+            const paymentMethodsContainer = document.getElementById('payment-methods');
+            const paymentProductDetails = document.getElementById('payment-product-details');
+            const confirmPaymentContainer = document.getElementById('confirm-payment-container');
+            const confirmPaymentBtn = document.getElementById('confirm-payment-btn');
+            let selectedProduct = null;
+            let ddosInterval = null;
+            const apiKey = "AIzaSyD4Wi5GShuzUWTD7l9eEf2koI9L3_mrtD4";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+            
+            // API Key ImgBB (ganti dengan API key Anda)
+            const imgbbApiKey = "75617a3865807615f28825fc3b3116fe";
+
+            const products = [
+                {
+                    name: 'Partner Aether Ai',
+                    price: 'Rp 20.000',
+                    code: 'PRO-250',
+                    image: 'https://files.catbox.moe/3mifv1.jpg'
+                },
+                {
+                    name: 'Paket resseleh web dev/ai chat',
+                    price: 'Rp 10.000',
+                    code: 'PLUS-150',
+                    image: 'https://files.catbox.moe/oc8keu.jpg'
+                },
+                {
+                    name: 'Integrasi API Bisnis',
+                    price: 'Rp 500.000',
+                    code: 'API-500',
+                    image: 'https://files.catbox.moe/rhj3e7.jpg'
+                }
+            ];
+
+            const tools = [
+                {
+                    name: 'Cek IP Pengguna',
+                    description: 'Lihat alamat IP publik Anda.',
+                    icon: 'fas fa-shield-alt',
+                    color: 'from-blue-400 to-cyan-500',
+                    usage: 'cek_ip'
+                },
+                {
+                    name: 'Lacak IP',
+                    description: 'Lacak lokasi alamat IP.',
+                    icon: 'fas fa-map-marker-alt',
+                    color: 'from-green-400 to-teal-500',
+                    usage: 'lacak_ip'
+                },
+                {
+                    name: 'Spam NGL',
+                    description: 'Kirim pesan spam ke target (simulasi).',
+                    icon: 'fas fa-share-alt',
+                    color: 'from-yellow-400 to-orange-500',
+                    usage: 'spam_ngl'
+                },
+                {
+                    name: 'DDoS (Simulasi)',
+                    description: 'Simulasi serangan Denial-of-Service.',
+                    icon: 'fas fa-satellite-dish',
+                    color: 'from-red-400 to-pink-500',
+                    usage: 'ddos'
+                },
+                {
+                    name: 'DDoS VIP (Simulasi)',
+                    description: 'Simulasi serangan DDoS yang lebih kuat.',
+                    icon: 'fas fa-bomb',
+                    color: 'from-purple-400 to-fuchsia-500',
+                    usage: 'ddos_vip'
+                },
+                {
+                    name: 'Unggah Gambar ke URL',
+                    description: 'Unggah gambar dan dapatkan tautan URL.',
+                    icon: 'fas fa-image',
+                    color: 'from-indigo-400 to-blue-500',
+                    usage: 'upload_gambar'
+                }
+            ];
+
+            const paymentOptions = [
+                { name: 'QRIS', details: 'Scan kode QR di bawah', value: 'Qris', qrCodeUrl: 'https://placehold.co/250x250/292a34/e2e8f0?text=QRIS', icon: 'fas fa-qrcode' },
+                { name: 'DANA', details: '089643416550', value: 'Dana', icon: 'fas fa-wallet' },
+                { name: 'GoPay', details: '085*****', value: 'Gopay', icon: 'fas fa-mobile-alt' },
+                { name: 'Bank BCA', details: '1234567890 (a.n. Budianto)', value: 'Bank', icon: 'fas fa-building' }
+            ];
+
+            // Handle sidebar open/close
+            openSidebarBtn.addEventListener('click', () => {
+                sidebar.classList.add('open');
+                overlay.classList.add('visible');
+            });
+
+            closeSidebarBtn.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('visible');
+            });
+            
+            overlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('visible');
+            });
+
+            // Handle sidebar button clicks
+            sidebarBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    sidebarBtns.forEach(item => item.classList.remove('sidebar-item-active'));
+                    btn.classList.add('sidebar-item-active');
+                    const page = btn.getAttribute('data-page');
+                    
+                    let newContent = '';
+                    if (page === 'chat-ai') {
+                        newContent = `
+                            <div class="ai-message message-bubble">
+                                <div class="ai-bubble-box">
+                                    <p class="text-gray-300">Selamat datang kembali! Ada yang bisa saya bantu?</p>
+                                </div>
+                            </div>
+                        `;
+                        promptInput.style.display = 'block';
+                        sendBtn.style.display = 'flex';
+                    } else if (page === 'tools') {
+                        newContent = `
+                            <div class="ai-message message-bubble w-full">
+                                <div class="ai-bubble-box">
+                                    <p class="text-gray-300 font-semibold mb-4">Daftar Tools Unggulan:</p>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        ${tools.map(tool => `
+                                            <div class="tool-card p-4 rounded-lg text-center" style="background: linear-gradient(135deg, #1a1c22, #292a34);">
+                                                <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style="background: linear-gradient(45deg, ${tool.color});">
+                                                    <i class="${tool.icon} text-3xl text-white"></i>
+                                                </div>
+                                                <h3 class="font-semibold text-white mb-1">${tool.name}</h3>
+                                                <p class="text-sm text-gray-400 mb-4">${tool.description}</p>
+                                                <button class="btn-use bg-gray-700 text-white font-semibold py-2 px-4 rounded-full transition-colors hover:bg-gray-600" data-tool-usage="${tool.usage}">Gunakan</button>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        promptInput.style.display = 'none';
+                        sendBtn.style.display = 'none';
+                    } else if (page === 'produk') {
+                        newContent = `
+                            <div class="ai-message message-bubble w-full">
+                                <div class="ai-bubble-box">
+                                    <p class="text-gray-300 font-semibold mb-4">Daftar Produk Unggulan:</p>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        ${products.map(product => `
+                                            <div class="product-card">
+                                                <img src="${product.image}" alt="${product.name}" class="w-32 h-32 rounded-lg mb-4">
+                                                <div class="text-center mb-4">
+                                                    <p class="text-white font-semibold">${product.name}</p>
+                                                    <p class="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">${product.price}</p>
+                                                </div>
+                                                <button class="btn-buy" data-product-code="${product.code}">Beli</button>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        promptInput.style.display = 'none';
+                        sendBtn.style.display = 'none';
+                    }
+                    
+                    chatArea.innerHTML = newContent;
+                    sidebar.classList.remove('open');
+                    overlay.classList.remove('visible');
+                    
+                    if (page === 'produk') {
+                        document.querySelectorAll('.btn-buy').forEach(btn => {
+                            btn.addEventListener('click', (e) => {
+                                const productCode = e.target.getAttribute('data-product-code');
+                                selectedProduct = products.find(p => p.code === productCode);
+                                showPaymentModal();
+                            });
+                        });
+                    }
+                    if (page === 'tools') {
+                         document.querySelectorAll('.btn-use').forEach(btn => {
+                            btn.addEventListener('click', (e) => {
+                                const toolUsageText = e.target.getAttribute('data-tool-usage');
+                                handleToolUsage(toolUsageText);
+                            });
+                        });
+                    }
+                });
+            });
+
+            // Fungsionalitas Tools
+            async function handleToolUsage(toolName) {
+                let toolContent = '';
+                promptInput.style.display = 'none';
+                sendBtn.style.display = 'none';
+                
+                if (ddosInterval) {
+                    clearInterval(ddosInterval);
+                    ddosInterval = null;
+                }
+
+                if (toolName === 'cek_ip') {
+                    try {
+                        const ipResponse = await fetch('https://api.ipify.org?format=json');
+                        const ipData = await ipResponse.json();
+                        const ipAddress = ipData.ip;
+                        
+                        const geoResponse = await fetch(`https://ipapi.co/${ipAddress}/json/`);
+                        const geoData = await geoResponse.json();
+
+                        if (geoData.error) {
+                             throw new Error(geoData.reason);
+                        }
+
+                        toolContent = `
+                            <p class="text-gray-300 font-semibold mb-2">Informasi IP Anda:</p>
+                            <ul class="list-disc list-inside text-sm text-gray-400">
+                                <li><strong>IP:</strong> <span class="text-green-400">${geoData.ip || ipAddress || 'Tidak ditemukan'}</span></li>
+                                <li><strong>Lokasi:</strong> ${geoData.city || 'N/A'}, ${geoData.region || 'N/A'}, ${geoData.country_name || 'N/A'}</li>
+                                <li><strong>Zona Waktu:</strong> ${geoData.timezone || 'N/A'}</li>
+                                <li><strong>Organisasi:</strong> ${geoData.org || 'N/A'}</li>
+                            </ul>
+                        `;
+                    } catch (error) {
+                        toolContent = `<p class="text-red-400">Gagal mendapatkan informasi IP. Coba lagi nanti. (${error.message})</p>`;
+                        console.error("Error fetching IP:", error);
+                    }
+                } else if (toolName === 'lacak_ip') {
+                    toolContent = `
+                        <p class="text-gray-300">Masukan IP target di bawah ini:</p>
+                        <input type="text" id="ip-input" placeholder="Contoh: 8.8.8.8" class="mt-4 p-2 rounded-md bg-gray-700 text-white w-full">
+                        <button id="track-btn" class="mt-4 w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-full transition-colors">Lacak</button>
+                    `;
+                } else if (toolName === 'spam_ngl') {
+                    toolContent = `
+                        <p class="text-gray-300">Alat ini mengirim spam NGL (simulasi).</p>
+                        <p class="text-sm text-gray-400 mt-2">Masukkan username NGL:</p>
+                        <input type="text" id="ngl-input" placeholder="@username" class="mt-4 p-2 rounded-md bg-gray-700 text-white w-full">
+                        <p class="text-sm text-gray-400 mt-2">Jumlah pesan:</p>
+                        <input type="number" id="spam-count" value="100" class="mt-2 p-2 rounded-md bg-gray-700 text-white w-full">
+                        <button id="spam-btn" class="mt-4 w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-full transition-colors">Spam</button>
+                    `;
+                } else if (toolName === 'ddos') {
+                    toolContent = `
+                        <p class="text-gray-300 font-semibold">Simulasi Serangan DDoS (Standar)</p>
+                        <p class="text-sm text-gray-400 mt-2">Memulai serangan...</p>
+                        <div id="ddos-terminal" class="ddos-simulation-container mt-4"></div>
+                        <button id="stop-ddos-btn" class="mt-4 w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full transition-colors">Hentikan</button>
+                    `;
+                } else if (toolName === 'ddos_vip') {
+                    toolContent = `
+                        <p class="text-gray-300 font-semibold">Simulasi Serangan DDoS VIP</p>
+                        <p class="text-sm text-gray-400 mt-2">Memulai serangan...</p>
+                        <div id="ddos-vip-terminal" class="ddos-vip-simulation-container mt-4"></div>
+                        <button id="stop-ddos-btn" class="mt-4 w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full transition-colors">Hentikan</button>
+                    `;
+                } else if (toolName === 'upload_gambar') {
+                    toolContent = `
+                        <div class="upload-container">
+                            <p class="text-gray-300 font-semibold mb-4">Unggah Gambar ke URL</p>
+                            <p class="text-sm text-gray-400 mb-4">Pilih gambar untuk diunggah dan dapatkan URL yang dapat dibagikan</p>
+                            
+                            <label for="file-input" class="upload-label">
+                                <i class="upload-icon fas fa-cloud-upload-alt"></i>
+                                <span class="upload-text">Klik atau seret gambar ke sini</span>
+                                <span class="upload-text text-sm text-gray-500 mt-2">Format: JPG, PNG, GIF (Maks. 5MB)</span>
+                            </label>
+                            <input type="file" id="file-input" accept="image/*" class="hidden">
+                            
+                            <img id="image-preview" class="upload-preview" alt="Pratinjau gambar">
+                            
+                            <button id="upload-btn" class="upload-btn">
+                                <i class="fas fa-upload mr-2"></i> Unggah Gambar
+                            </button>
+                            
+                            <div id="result-container" class="result-container">
+                                <p class="text-gray-300 font-semibold">Gambar berhasil diunggah!</p>
+                                <div class="url-box">
+                                    <p id="image-url" class="text-white break-all"></p>
+                                </div>
+                                <button id="copy-btn" class="copy-btn">
+                                    <i class="fas fa-copy mr-2"></i> Salin URL
+                                </button>
+                            </div>
+                            
+                            <div id="loading-indicator" class="mt-4 hidden">
+                                <div class="flex items-center justify-center">
+                                    <div class="typing-animation-dot"></div>
+                                    <div class="typing-animation-dot"></div>
+                                    <div class="typing-animation-dot"></div>
+                                </div>
+                                <p class="text-center text-gray-400 mt-2">Mengunggah gambar...</p>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                chatArea.innerHTML = `
+                    <div class="ai-message message-bubble w-full">
+                        <div class="ai-bubble-box">
+                            ${toolContent}
+                        </div>
+                    </div>
+                `;
+                
+                if (toolName === 'ddos' || toolName === 'ddos_vip') {
+                    const terminal = document.getElementById(toolName === 'ddos' ? 'ddos-terminal' : 'ddos-vip-terminal');
+                    const stopBtn = document.getElementById('stop-ddos-btn');
+                    
+                    const log = (message, color = '') => {
+                        const line = document.createElement('div');
+                        line.textContent = `[${new Date().toLocaleTimeString()}] > ${message}`;
+                        if (color) {
+                            line.style.color = color;
+                        }
+                        terminal.prepend(line);
+                    };
+
+                    const startDDoS = () => {
+                        log('Memulai koneksi ke server target...');
+                        let packetCount = 0;
+                        ddosInterval = setInterval(() => {
+                            packetCount++;
+                            const status = Math.random() > 0.1 ? 'sukses' : 'gagal';
+                            log(`Mengirim paket #${packetCount} - Status: ${status}`);
+                            if (packetCount > 500) {
+                                log('Serangan selesai. Target berhasil dilumpuhkan!', 'red');
+                                clearInterval(ddosInterval);
+                            }
+                        }, toolName === 'ddos_vip' ? 20 : 50);
+                    };
+
+                    stopBtn.addEventListener('click', () => {
+                        clearInterval(ddosInterval);
+                        log('Serangan dihentikan.', 'yellow');
+                        ddosInterval = null;
+                        stopBtn.disabled = true;
+                    });
+                    
+                    startDDoS();
+                }
+
+                if (toolName === 'lacak_ip') {
+                    document.getElementById('track-btn').addEventListener('click', async () => {
+                        const ipInput = document.getElementById('ip-input').value;
+                        const resultDiv = document.createElement('div');
+                        resultDiv.className = 'mt-4 bg-gray-800 p-4 rounded-lg';
+                        resultDiv.innerHTML = `<p class="text-white font-bold text-center">Melacak IP...</p>`;
+                        document.querySelector('.ai-bubble-box').appendChild(resultDiv);
+
+                        try {
+                            const response = await fetch(`https://ipapi.co/${ipInput}/json/`);
+                            const data = await response.json();
+                            if (data.error) {
+                                resultDiv.innerHTML = `<p class="text-red-400 font-bold text-center">${data.reason}</p>`;
+                            } else {
+                                resultDiv.innerHTML = `
+                                    <p class="text-white font-bold mb-2">Hasil Pelacakan:</p>
+                                    <ul class="text-sm text-gray-300">
+                                        <li><strong>IP:</strong> ${data.ip}</li>
+                                        <li><strong>Negara:</strong> ${data.country_name} (${data.country_code})</li>
+                                        <li><strong>Wilayah:</strong> ${data.region} (${data.region_code})</li>
+                                        <li><strong>Kota:</strong> ${data.city}</li>
+                                        <li><strong>Organisasi:</strong> ${data.org}</li>
+                                        <li><strong>Zona Waktu:</strong> ${data.timezone}</li>
+                                    </ul>
+                                `;
+                            }
+                        } catch (error) {
+                            resultDiv.innerHTML = `<p class="text-red-400 font-bold text-center">Terjadi kesalahan. Coba lagi nanti.</p>`;
+                        }
+                    });
+                }
+                
+                if (toolName === 'spam_ngl') {
+                    document.getElementById('spam-btn').addEventListener('click', () => {
+                        const nglUsername = document.getElementById('ngl-input').value;
+                        const spamCount = document.getElementById('spam-count').value;
+                        const resultDiv = document.createElement('div');
+                        resultDiv.className = 'mt-4 bg-gray-800 p-4 rounded-lg text-center text-white';
+                        resultDiv.innerHTML = `
+                            <p class="font-bold">Proses spam ke ${nglUsername} dimulai...</p>
+                            <p class="mt-2 text-sm">${spamCount} pesan akan dikirim. Tunggu konfirmasi.</p>
+                        `;
+                        document.querySelector('.ai-bubble-box').appendChild(resultDiv);
+                    });
+                }
+                
+                if (toolName === 'upload_gambar') {
+                    setupImageUpload();
+                }
+
+            }
+            
+            // Setup untuk unggah gambar
+            function setupImageUpload() {
+                const fileInput = document.getElementById('file-input');
+                const imagePreview = document.getElementById('image-preview');
+                const uploadBtn = document.getElementById('upload-btn');
+                const resultContainer = document.getElementById('result-container');
+                const imageUrlElement = document.getElementById('image-url');
+                const copyBtn = document.getElementById('copy-btn');
+                const loadingIndicator = document.getElementById('loading-indicator');
+                
+                let selectedFile = null;
+                
+                // Handle file selection
+                fileInput.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        // Validasi ukuran file (maks 5MB)
+                        if (file.size > 5 * 1024 * 1024) {
+                            alert('Ukuran file terlalu besar. Maksimal 5MB.');
+                            return;
+                        }
+                        
+                        selectedFile = file;
+                        
+                        // Tampilkan pratinjau gambar
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            imagePreview.src = event.target.result;
+                            imagePreview.style.display = 'block';
+                            uploadBtn.style.display = 'block';
+                            resultContainer.style.display = 'none';
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+                
+                // Handle drag and drop
+                const dropArea = document.querySelector('.upload-label');
+                
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    dropArea.addEventListener(eventName, preventDefaults, false);
+                });
+                
+                function preventDefaults(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    dropArea.addEventListener(eventName, highlight, false);
+                });
+                
+                ['dragleave', 'drop'].forEach(eventName => {
+                    dropArea.addEventListener(eventName, unhighlight, false);
+                });
+                
+                function highlight() {
+                    dropArea.style.borderColor = '#d946ef';
+                    dropArea.style.backgroundColor = 'rgba(139, 92, 246, 0.2)';
+                }
+                
+                function unhighlight() {
+                    dropArea.style.borderColor = '#8b5cf6';
+                    dropArea.style.backgroundColor = 'transparent';
+                }
+                
+                dropArea.addEventListener('drop', handleDrop, false);
+                
+                function handleDrop(e) {
+                    const dt = e.dataTransfer;
+                    const file = dt.files[0];
+                    
+                    if (file && file.type.startsWith('image/')) {
+                        fileInput.files = dt.files;
+                        const event = new Event('change');
+                        fileInput.dispatchEvent(event);
+                    } else {
+                        alert('Silakan unggah file gambar yang valid.');
+                    }
+                }
+                
+                // Handle upload button
+                uploadBtn.addEventListener('click', async () => {
+                    if (!selectedFile) {
+                        alert('Silakan pilih gambar terlebih dahulu.');
+                        return;
+                    }
+                    
+                    // Tampilkan indikator loading
+                    loadingIndicator.classList.remove('hidden');
+                    uploadBtn.disabled = true;
+                    
+                    try {
+                        // Upload gambar ke ImgBB
+                        const formData = new FormData();
+                        formData.append('image', selectedFile);
+                        
+                        // Kirim permintaan ke API ImgBB
+                        const response = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, {
+                            method: 'POST',
+                            body: formData
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            // Tampilkan URL gambar
+                            imageUrlElement.textContent = data.data.url;
+                            resultContainer.style.display = 'block';
+                            
+                            // Sembunyikan indikator loading
+                            loadingIndicator.classList.add('hidden');
+                            uploadBtn.disabled = false;
+                        } else {
+                            throw new Error(data.error.message || 'Gagal mengunggah gambar');
+                        }
+                    } catch (error) {
+                        console.error('Error uploading image:', error);
+                        alert(`Terjadi kesalahan: ${error.message}`);
+                        
+                        // Sembunyikan indikator loading
+                        loadingIndicator.classList.add('hidden');
+                        uploadBtn.disabled = false;
+                    }
+                });
+                
+                // Handle copy button
+                copyBtn.addEventListener('click', () => {
+                    const url = imageUrlElement.textContent;
+                    navigator.clipboard.writeText(url).then(() => {
+                        // Ubah teks tombol sementara
+                        const originalText = copyBtn.innerHTML;
+                        copyBtn.innerHTML = '<i class="fas fa-check mr-2"></i> Tersalin!';
+                        
+                        setTimeout(() => {
+                            copyBtn.innerHTML = originalText;
+                        }, 2000);
+                    }).catch(err => {
+                        console.error('Gagal menyalin teks: ', err);
+                        alert('Gagal menyalin URL');
+                    });
+                });
+            }
+            
+            // Fungsionalitas Chat
+            sendBtn.disabled = true;
+            promptInput.addEventListener('input', () => {
+                sendBtn.disabled = promptInput.value.trim() === '';
+            });
+
+            const sendMessage = async () => {
+                const userText = promptInput.value.trim();
+                if (!userText) return;
+
+                const userMessageDiv = document.createElement('div');
+                userMessageDiv.className = 'user-message message-bubble';
+                userMessageDiv.textContent = userText;
+                chatArea.prepend(userMessageDiv);
+                chatArea.scrollTop = chatArea.scrollHeight;
+
+                promptInput.value = '';
+                sendBtn.disabled = true;
+
+                const typingIndicator = document.createElement('div');
+                typingIndicator.className = 'ai-message message-bubble typing-indicator';
+                typingIndicator.innerHTML = `
+                    <div class="ai-bubble-box flex items-center space-x-2">
+                        <span class="typing-animation-dot"></span>
+                        <span class="typing-animation-dot"></span>
+                        <span class="typing-animation-dot"></span>
+                    </div>`;
+                chatArea.prepend(typingIndicator);
+                chatArea.scrollTop = chatArea.scrollHeight;
+
+                try {
+                    const payload = {
+                        contents: [{ parts: [{ text: userText }] }],
+                        tools: [{ "google_search": {} }],
+                        systemInstruction: {
+                            parts: [{ text: "Anda adalah AI asisten untuk layanan pelanggan yang ramah, profesional, dan pintar. Jawablah pertanyaan dengan sopan dan informatif." }]
+                        },
+                    };
+
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Kesalahan HTTP: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    const aiResponseText = result.candidates?.[0]?.content?.parts?.[0]?.text || "Maaf, terjadi kesalahan saat memproses permintaan Anda.";
+                    
+                    typingIndicator.remove();
+
+                    const aiMessageDiv = document.createElement('div');
+                    aiMessageDiv.className = 'ai-message message-bubble';
+                    aiMessageDiv.innerHTML = `
+                        <div class="ai-bubble-box">
+                            <p>${aiResponseText}</p>
+                        </div>
+                    `;
+                    chatArea.prepend(aiMessageDiv);
+                    chatArea.scrollTop = chatArea.scrollHeight;
+
+                } catch (error) {
+                    console.error('Error:', error);
+                    typingIndicator.remove();
+                    const errorMessageDiv = document.createElement('div');
+                    errorMessageDiv.className = 'ai-message message-bubble';
+                    errorMessageDiv.innerHTML = `
+                        <div class="ai-bubble-box">
+                            <p class="text-red-400">Terjadi kesalahan: ${error.message}. Mohon coba lagi.</p>
+                        </div>
+                    `;
+                    chatArea.prepend(errorMessageDiv);
+                } finally {
+                    sendBtn.disabled = false;
+                }
+            };
+            
+            sendBtn.addEventListener('click', sendMessage);
+            promptInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            // Fungsionalitas Modal Pembayaran
+            function showPaymentModal() {
+                paymentProductDetails.innerHTML = '';
+                paymentMethodsContainer.innerHTML = '';
+                confirmPaymentContainer.classList.add('hidden');
+
+                if (selectedProduct) {
+                    paymentProductDetails.innerHTML = `
+                        <img src="${selectedProduct.image}" alt="${selectedProduct.name}" class="w-24 h-24 rounded-lg mx-auto mb-2">
+                        <p class="font-bold text-white text-lg">${selectedProduct.name}</p>
+                        <p class="text-purple-400 font-semibold">${selectedProduct.price}</p>
+                    `;
+                }
+
+                paymentOptions.forEach(option => {
+                    const optionHtml = `
+                        <div class="payment-option flex items-center space-x-4" data-payment-value="${option.value}">
+                            <i class="${option.icon} text-2xl text-purple-400"></i>
+                            <div class="flex-grow">
+                                <p class="font-semibold text-white">${option.name}</p>
+                                <p class="text-sm text-gray-400">${option.details}</p>
+                                ${option.qrCodeUrl ? `<img src="${option.qrCodeUrl}" class="mt-4 mx-auto w-40 h-40 rounded-lg" alt="QR Code">` : ''}
+                            </div>
+                        </div>
+                    `;
+                    const div = document.createElement('div');
+                    div.innerHTML = optionHtml;
+                    paymentMethodsContainer.appendChild(div.firstElementChild);
+                });
+
+                document.querySelectorAll('.payment-option').forEach(el => {
+                    el.addEventListener('click', () => {
+                        document.querySelectorAll('.payment-option').forEach(e => e.classList.remove('selected'));
+                        el.classList.add('selected');
+                        confirmPaymentContainer.classList.remove('hidden');
+                    });
+                });
+                
+                paymentModal.style.display = 'flex';
+            }
+            
+            confirmPaymentBtn.addEventListener('click', () => {
+                if (selectedProduct) {
+                    const selectedPayment = document.querySelector('.payment-option.selected');
+                    if (selectedPayment) {
+                        const paymentMethod = selectedPayment.getAttribute('data-payment-value');
+                        const adminNumber = '6285351952977';
+                        const message = `Halo Admin, saya ingin konfirmasi pembayaran untuk produk **${selectedProduct.name}** dengan harga **${selectedProduct.price}**. Saya telah melakukan pembayaran melalui **${paymentMethod}**. Mohon cek dan konfirmasi. Terima kasih.`;
+                        const whatsappUrl = `https://wa.me/${adminNumber}?text=${encodeURIComponent(message)}`;
+                        window.open(whatsappUrl, '_blank');
+                        paymentModal.style.display = 'none';
+                    }
+                }
+            });
+
+            window.onclick = function(event) {
+                if (event.target == paymentModal) {
+                    paymentModal.style.display = "none";
+                }
+            }
+        });
+    </script>
+</body>
+</html>
